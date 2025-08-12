@@ -1,0 +1,20 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: e-commerce
+  profiles:
+    active: @spring.profiles.active@
+
+management:
+  endpoint:
+    web:
+      exposure:
+        include: '*'
+
+
+logging:
+  level:
+    root: INFO
+    web: INFO
