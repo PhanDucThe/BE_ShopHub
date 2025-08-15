@@ -3,8 +3,7 @@ package vn.ducthe.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.ducthe.dto.request.ProductCreateRequest;
-import vn.ducthe.dto.request.ProductUpdateRequest;
+import vn.ducthe.dto.request.CreateProductRequest;
 import vn.ducthe.dto.response.ProductDTO;
 import vn.ducthe.entity.*;
 import vn.ducthe.mapper.*;
@@ -62,57 +61,30 @@ public class ProductsServiceImpl implements ProductsService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long createProduct(ProductCreateRequest productCreateRequest) {
-        // Phần Edit sản phẩm thì sẻ làm ở đây là vì nếu có ID thì có sẻ cập nhật lại thôi không tạo mới.
+    public Long createProduct(CreateProductRequest createProductRequest) {
 
-        ProductsEntity products = productMapper.toEntity(productCreateRequest);
-        // Sau do minh se tách các bien the cua san pham do ra roi lưu lại.
-        List<VariantsEntity> variantsEntities = productCreateRequest.getVariants().stream().map(item -> {
-            return variantMapper.toEntity(item, products);
-        }).toList();
-        products.setVariantsEntities(variantsEntities);
-        // Xu li them phan thong so ki thuat nua
-        List<ProductSpecificationsEntity> productSpeci = productCreateRequest.getSpecifications().stream().map(spec -> {
-            return productSpecificationMapper.toEntity(spec, products);
-        }).toList();
-        products.setProductSpecificationsEntities(productSpeci);
-        productsRepository.save(products);
-        return products.getId();
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateProduct(ProductUpdateRequest productUpdateRequest) {
-        // Lay Product Tồn tại
-        ProductsEntity product = productsRepository.findById(productUpdateRequest.getProductId()).get();
-        // Quan hệ ManyToOne thì không nên xóa rồi mới update --> Lỗi. NÊn chỉ cần set thôi.
-
-        // Update basic info
-        ShopsEntity shopsEntity = shopsRepository.findById(productUpdateRequest.getBasicInfo().getShopId()).get();
+        // Informatin Basic.
+        ProductsEntity product = new ProductsEntity();
+        ShopsEntity shopsEntity = shopsRepository.findById(createProductRequest.getShopId()).get();
+        BrandsEntity brandsEntity = brandsRepository.findById(createProductRequest.getBrandId()).get();
+        CategoriesEntity categoriesEntity = categoriesRepository.findById(createProductRequest.getCategoryId()).get();
         product.setShopsEntity(shopsEntity);
-        CategoriesEntity categoriesEntity = categoriesRepository.findById(productUpdateRequest.getBasicInfo().getCategoryId()).get();
-        product.setCategoriesEntity(categoriesEntity);
-        BrandsEntity brandsEntity = brandsRepository.findById(productUpdateRequest.getBasicInfo().getBrandId()).get();
         product.setBrandsEntity(brandsEntity);
-        product.setName(productUpdateRequest.getBasicInfo().getName());
-        product.setDescription(productUpdateRequest.getBasicInfo().getDescription());
-        product.setSlug(productUpdateRequest.getBasicInfo().getSlug());
+        product.setCategoriesEntity(categoriesEntity);
+        product.setName(createProductRequest.getName());
+        product.setSlug(createProductRequest.getSlug());
+        product.setDescription(createProductRequest.getDescription());
 
-        // Chi xoa nhung quan he la OneToMany thoi --> Product --> Variants.
-        // XỬ LÝ VARIANTS. Không nên clear rồi add vì gây ra lỗi Hibernate sẻ bị xung đột, vì nó vừa xóa vừa thêm vào nó không biết
-        // được là nên làm như nào.
-        List<VariantsEntity> newVarians = productUpdateRequest.getVariants().stream().map(var -> variantMapper.toEntity(var, product)).toList();
-        // Set parent cho tất cả variants mới
-        newVarians.forEach(variant -> variant.setProductsEntity(product));
-        // Thay thế collection cũ bằng collection mới
-        product.setVariantsEntities(newVarians);
+        // Variant
+        List<VariantsEntity> variantsEntities = createProductRequest.getVariants().stream().map(var -> variantMapper.toEntityCreate(var, product)).toList();
+        product.setVariantsEntities(variantsEntities);
 
-        // XỬ LÝ SPECIFICATIONS
-        List<ProductSpecificationsEntity> newSpecs = productUpdateRequest.getSpecifications().stream().map(spe ->  productSpecificationMapper.toEntity(spe, product)).toList();
-        newSpecs.forEach(spec -> spec.setProductsEntity(product));
-        product.setProductSpecificationsEntities(newSpecs);
+        // Thong so.
+        List<ProductSpecificationsEntity> speci = createProductRequest.getSpecifications().stream().map(spec -> productSpecificationMapper.toEntityCreate(spec, product)).toList();
+        product.setProductSpecificationsEntities(speci);
 
         productsRepository.save(product);
+        return product.getId();
     }
 
     @Override

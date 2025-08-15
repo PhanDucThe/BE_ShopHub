@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ProductSpecificationRequest {
+public class CreateSpecificationRequest {
     private String key;
     private String value;
 }

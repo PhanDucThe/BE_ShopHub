@@ -2,7 +2,6 @@ package vn.ducthe.mapper;
 
 import org.springframework.stereotype.Component;
 import vn.ducthe.dto.response.PriceDTO;
-import vn.ducthe.entity.PromotionsEntity;
 import vn.ducthe.entity.VariantsEntity;
 
 @Component
