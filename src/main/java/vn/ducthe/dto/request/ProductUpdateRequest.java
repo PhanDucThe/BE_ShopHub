@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -23,9 +24,9 @@ public class ProductUpdateRequest {
 
     @NotEmpty(message = "Thông tin cụ thể của sản phẩm không được để trống!")
     @Valid
-    private List<ProductVariantRequest> variants;
+    private List<ProductVariantUpdateRequest> productVariant = new ArrayList<>();
 
     @NotEmpty(message = "Các thông số kĩ thuật của sản phẩm không được để trống!")
     @Valid
-    private List<ProductSpecificationRequest> specifications;
+    private List<ProductVariantUpdateRequest> specifications = new ArrayList<>();
 }

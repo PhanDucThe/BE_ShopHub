@@ -26,4 +26,9 @@ public class ProductController {
         productsService.updateProduct(productUpdateRequest);
         return new ApiResponse<>(HttpStatus.OK.value(), "update product successfully");
     }
+
+    @GetMapping(value = "/v1/products")
+    public ApiResponse<?> getAllProducts() {
+        return new ApiResponse<>(HttpStatus.OK.value(), "get all products successfully", productsService.getAllProducts());
+    }
 }

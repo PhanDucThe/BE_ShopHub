@@ -11,4 +11,6 @@ public interface ProductsService {
     List<ProductDTO> getProductsByCategory(String slug);
     Long createProduct(ProductCreateRequest productCreateRequest);
     void updateProduct(ProductUpdateRequest productUpdateRequest);
+    List<ProductDTO> getAllProducts(); // Mai mot se sua sau khi co dieu kien
+    List<ProductDTO> getNewProducts();
 }

@@ -24,4 +24,9 @@ public class HomeController {
     public ApiResponse<?> getProductsByCategory(@PathVariable String slug) {
         return new ApiResponse<>(200, "success", productsService.getProductsByCategory(slug));
     }
+
+    @GetMapping(value = "/v1/new-products")
+    public ApiResponse<?> getNewProducts() {
+        return new ApiResponse<>(200, "success", productsService.getNewProducts());
+    }
 }

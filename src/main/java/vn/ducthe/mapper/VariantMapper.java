@@ -2,11 +2,12 @@ package vn.ducthe.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import vn.ducthe.dto.request.ProductVariantRequest;
+import vn.ducthe.dto.request.ProductVariantCreatRequest;
 import vn.ducthe.entity.ImagesEntity;
 import vn.ducthe.entity.ProductsEntity;
 import vn.ducthe.entity.VariantAttributeOptionsEntity;
 import vn.ducthe.entity.VariantsEntity;
+import vn.ducthe.repository.VariantsRepository;
 
 import java.util.List;
 
@@ -16,9 +17,18 @@ public class VariantMapper {
 
     private final ImageMapper imageMapper;
     private final VariantAttributeOptionMapper  variantAttributeOptionMapper;
+    private final VariantsRepository  variantsRepository;
 
-    public VariantsEntity toEntity(ProductVariantRequest productVariantRequest, ProductsEntity productsEntity) {
-        VariantsEntity variantsEntity = new VariantsEntity();
+    public VariantsEntity toEntity(ProductVariantCreatRequest productVariantRequest, ProductsEntity productsEntity) {
+        VariantsEntity variantsEntity; // variantsEntity = null
+        if (productVariantRequest.getVariantId() != null) {
+            variantsEntity = variantsRepository.findById(productVariantRequest.getVariantId()).orElse(null);
+        } else {
+            variantsEntity = new  VariantsEntity();
+        }
+
+        variantsEntity.setProductsEntity(productsEntity);
+
         variantsEntity.setSkuCode(productVariantRequest.getSkuCode());
         variantsEntity.setVariantName(productVariantRequest.getVariantName());
         variantsEntity.setOriginalPrice(productVariantRequest.getOriginalPrice());
@@ -26,18 +36,20 @@ public class VariantMapper {
         variantsEntity.setStock(productVariantRequest.getStock());
         variantsEntity.setSold(0); // Default is Zero
 
+
         // Phan Xu li Anh
-        List<ImagesEntity> images = productVariantRequest.getImages().stream().map(img -> {
-            return imageMapper.toEntity(img,variantsEntity);
-        }).toList();
-        variantsEntity.setImagesEntities(images);
+        List<ImagesEntity> newImages  = productVariantRequest.getImages().stream().map(img -> imageMapper.toEntity(img, variantsEntity)).toList();
+        newImages.forEach(image -> image.setVariantsEntity(variantsEntity));
+        variantsEntity.setImagesEntities(newImages);
+
+
 
         // Xu li Cac Attribute_Option
-        List<VariantAttributeOptionsEntity> variantAttributeOptionsEntities = productVariantRequest.getAttributeOptionIds().stream().map(attribute -> {
-            return variantAttributeOptionMapper.toEntity(variantsEntity, attribute);
-        }).toList();
-        variantsEntity.setProductsEntity(productsEntity);
-        variantsEntity.setVariantAttributeOptionsEntities(variantAttributeOptionsEntities);
+        List<VariantAttributeOptionsEntity> newAttributeOptions  = productVariantRequest.getAttributeOptionIds().stream().map(attributeId  -> variantAttributeOptionMapper.toEntity(variantsEntity, attributeId)).toList();
+        newAttributeOptions.forEach(option -> option.setVariantsEntity(variantsEntity));
+
+        // Thay thế collection
+        variantsEntity.setVariantAttributeOptionsEntities(newAttributeOptions);
         return variantsEntity;
     }
 }

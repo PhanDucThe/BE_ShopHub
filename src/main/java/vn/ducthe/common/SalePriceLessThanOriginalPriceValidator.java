@@ -2,16 +2,16 @@ package vn.ducthe.common;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import vn.ducthe.dto.request.ProductVariantRequest;
+import vn.ducthe.dto.request.ProductVariantCreatRequest;
 
-public class SalePriceLessThanOriginalPriceValidator implements ConstraintValidator<SalePriceLessThanOriginalPrice, ProductVariantRequest> {
+public class SalePriceLessThanOriginalPriceValidator implements ConstraintValidator<SalePriceLessThanOriginalPrice, ProductVariantCreatRequest> {
 
     @Override
     public void initialize(SalePriceLessThanOriginalPrice salePriceLessThanOriginalPrice) {
     }
 
     @Override
-    public boolean isValid(ProductVariantRequest productVariantRequest, ConstraintValidatorContext cxt) {
+    public boolean isValid(ProductVariantCreatRequest productVariantRequest, ConstraintValidatorContext cxt) {
         if (productVariantRequest == null) return true; // khong check no rong vi da su dung @NotNull roi
         Double originalPrice = productVariantRequest.getOriginalPrice();
         Double salePrice = productVariantRequest.getSalePrice();

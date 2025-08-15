@@ -12,6 +12,7 @@ import vn.ducthe.mapper.*;
 import vn.ducthe.repository.*;
 import vn.ducthe.service.ProductsService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,10 +24,6 @@ public class ProductsServiceImpl implements ProductsService {
     private final VariantsRepository variantsRepository;
     private final CategoriesRepository categoriesRepository;
     private final ProductsRepository productsRepository;
-    private final AttributeOptionsRepository attributeOptionsRepository;
-    private final SpecificationsRepository specificationsRepository;
-    private final ImageMapper imageMapper;
-    private final VariantAttributeOptionMapper  variantAttributeOptionMapper;
     private final ProductSpecificationMapper  productSpecificationMapper;
     private final VariantMapper variantMapper;
     private final ShopsRepository shopsRepository;
@@ -86,9 +83,11 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateProduct(ProductUpdateRequest productUpdateRequest) {
-        // Lay Product Tồn tại ra đã rồi mình làm tiếp.
+        // Lay Product Tồn tại
         ProductsEntity product = productsRepository.findById(productUpdateRequest.getProductId()).get();
         // Quan hệ ManyToOne thì không nên xóa rồi mới update --> Lỗi. NÊn chỉ cần set thôi.
+
+        // Update basic info
         ShopsEntity shopsEntity = shopsRepository.findById(productUpdateRequest.getBasicInfo().getShopId()).get();
         product.setShopsEntity(shopsEntity);
         CategoriesEntity categoriesEntity = categoriesRepository.findById(productUpdateRequest.getBasicInfo().getCategoryId()).get();
@@ -100,25 +99,41 @@ public class ProductsServiceImpl implements ProductsService {
         product.setSlug(productUpdateRequest.getBasicInfo().getSlug());
 
         // Chi xoa nhung quan he la OneToMany thoi --> Product --> Variants.
-        // Đối với biến thể của sản phẩm thì phải xóa các biến tương ứng với sản phẩm đã
-        // rồi mới thêm vào lại.
+        // XỬ LÝ VARIANTS. Không nên clear rồi add vì gây ra lỗi Hibernate sẻ bị xung đột, vì nó vừa xóa vừa thêm vào nó không biết
+        // được là nên làm như nào.
+        List<VariantsEntity> newVarians = productUpdateRequest.getVariants().stream().map(var -> variantMapper.toEntity(var, product)).toList();
+        // Set parent cho tất cả variants mới
+        newVarians.forEach(variant -> variant.setProductsEntity(product));
+        // Thay thế collection cũ bằng collection mới
+        product.setVariantsEntities(newVarians);
 
-        // Xóa biến thể variant tương ứng. Và vì mình có sử dụng orPhanreval thì các image của variant
-        // sẻ bị xóa tương ứng.
-        product.getVariantsEntities().clear();
-        List<VariantsEntity> variants = productUpdateRequest.getVariants().stream().map(var -> {
-            return variantMapper.toEntity(var, product);
-        }).toList();
-        product.setVariantsEntities(variants);
-
-
-        // Xóa các thông số kỹ thuật
-        product.getProductSpecificationsEntities().clear();
-        List<ProductSpecificationsEntity> productSpec = productUpdateRequest.getSpecifications().stream().map(spec -> {
-            return productSpecificationMapper.toEntity(spec, product);
-        }).toList();
-        product.setProductSpecificationsEntities(productSpec);
+        // XỬ LÝ SPECIFICATIONS
+        List<ProductSpecificationsEntity> newSpecs = productUpdateRequest.getSpecifications().stream().map(spe ->  productSpecificationMapper.toEntity(spe, product)).toList();
+        newSpecs.forEach(spec -> spec.setProductsEntity(product));
+        product.setProductSpecificationsEntities(newSpecs);
 
         productsRepository.save(product);
+    }
+
+    @Override
+    public List<ProductDTO> getAllProducts() {
+        List<ProductDTO> allProducts = new ArrayList<>();
+        List<VariantsEntity> variantsEntities = variantsRepository.findAll();
+        for (VariantsEntity variantsEntity : variantsEntities) {
+            ProductDTO productDTO = productMapper.toDto(variantsEntity);
+            allProducts.add(productDTO);
+        }
+        return allProducts;
+    }
+
+    @Override
+    public List<ProductDTO> getNewProducts() {
+        // Lay ra thoi gian hien tai va tru di 3 thang truoc
+        LocalDateTime localDateTime = LocalDateTime.now().minusMonths(3);
+        List<VariantsEntity> variants = variantsRepository.findByCreatedDateAfter(localDateTime);
+
+        return variants.stream().map(var -> {
+            return productMapper.toDto(var);
+        }).toList();
     }
 }

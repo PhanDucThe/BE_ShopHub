@@ -18,4 +18,5 @@ public class SpecificationsEntity extends BaseEntity implements Serializable {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "specificationsEntity")
     private List<ProductSpecificationsEntity> productSpecificationsEntities = new ArrayList<>();
+
 }

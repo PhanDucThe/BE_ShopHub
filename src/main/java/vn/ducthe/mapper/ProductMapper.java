@@ -30,6 +30,9 @@ public class ProductMapper {
         productDTO.setPrice(priceMapper.toPriceDTO(variantsEntity));
         productDTO.setReviews(reviewMapper.toReviewDTO(variantsEntity.getReviewsEntities()));
         productDTO.setSold(variantsEntity.getSold());
+        productDTO.setStatus(variantsEntity.getStatus());
+        productDTO.setStock(variantsEntity.getStock());
+        productDTO.setSkuCode(variantsEntity.getSkuCode());
         return productDTO;
     }
 

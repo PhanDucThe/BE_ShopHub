@@ -12,7 +12,8 @@ import java.util.List;
 @Getter
 @Setter
 @SalePriceLessThanOriginalPrice
-public class ProductVariantRequest {
+public class ProductVariantCreatRequest {
+
     @NotBlank(message = "Mã SKU không được để trống!")
     @Size(max = 50, message = "Mã SKU không được vượt quá 50 ký tự!")
     private String skuCode;
@@ -37,5 +38,5 @@ public class ProductVariantRequest {
 
     @NotEmpty(message = "Ảnh của sản phẩm không được để trống!")
     @Valid // Bắt buộc validate luôn class VariantImage bên trong
-    private List<VariantImage> images =  new ArrayList<>();
+    private List<VariantImageCreateRequest> images =  new ArrayList<>();
 }

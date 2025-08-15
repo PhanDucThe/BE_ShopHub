@@ -6,7 +6,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class VariantImage {
+public class VariantImageCreateRequest {
+
     @NotBlank(message = "Ảnh không được để trống!")
     private String url;
     private String alt;

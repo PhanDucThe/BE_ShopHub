@@ -17,4 +17,7 @@ public class ProductDTO {
     private ReviewDTO reviews;
     private PriceDTO price;
     private Integer sold;
+    private String skuCode;
+    private Integer stock;
+    private String status;
 }

@@ -32,6 +32,9 @@ public class VariantsEntity extends BaseEntity implements Serializable {
     @Column(name = "sold")
     private Integer sold;
 
+    @Column(name = "status")
+    private String status;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id",  nullable = false)
     private ProductsEntity productsEntity;

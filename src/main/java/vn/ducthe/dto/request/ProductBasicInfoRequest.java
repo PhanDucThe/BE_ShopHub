@@ -9,9 +9,6 @@ import lombok.Setter;
 @Setter
 public class ProductBasicInfoRequest {
 
-    @NotNull(message = "Shop không được để trống!")
-    private Long shopId; // Để biết sản phẩm này thuộc về shops nào
-
     @NotNull(message = "Danh mục không được để trống!")
     private Long categoryId;
 
@@ -21,6 +18,5 @@ public class ProductBasicInfoRequest {
     @NotBlank(message = "Tên sản phẩm không được để trống!")
     private String name;
 
-    private String slug;
     private String description;
 }
