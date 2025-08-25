@@ -3,9 +3,9 @@ package vn.ducthe.mapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import vn.ducthe.dto.response.CategoryBaseDTO;
-import vn.ducthe.dto.response.CategoryDTO;
-import vn.ducthe.entity.CategoriesEntity;
-import vn.ducthe.repository.CategoriesRepository;
+import vn.ducthe.dto.response.FindCategoryDTO;
+import vn.ducthe.model.CategoryEntity;
+import vn.ducthe.repository.CategoryRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,26 +13,30 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class CategoryMapper {
+    private final CategoryRepository categoryRepository;
     private final CategoryBaseMapper categoryBaseMapper;
-    private final CategoriesRepository categoriesRepository;
 
-    public List<CategoryDTO> toCategoryDTO(List<CategoriesEntity> parents) {
-        List<CategoryDTO> categoryDTOs = new ArrayList<>();
-        for (CategoriesEntity parent : parents) {
-            CategoryDTO categoryDTO = new CategoryDTO();
-            categoryDTO.setId(parent.getId());
-            categoryDTO.setCategory(categoryBaseMapper.categoryBaseDTO(parent));
+    public List<FindCategoryDTO> findCategoryDTOS(List<CategoryEntity> parents) {
+        List<FindCategoryDTO> categoryDTOS = new ArrayList<>();
 
-            // Cac con
-            List<CategoriesEntity>  children = categoriesRepository.findByParentId(parent.getId());
-            List<CategoryBaseDTO> childrenBaseDTO = new ArrayList<>();
-            for (CategoriesEntity child : children) {
-                CategoryBaseDTO categoryBaseDTOChild = categoryBaseMapper.categoryBaseDTO(child);
-                childrenBaseDTO.add(categoryBaseDTOChild);
-            }
-            categoryDTO.setSubcategories(childrenBaseDTO);
-            categoryDTOs.add(categoryDTO);
-        }
-        return categoryDTOs;
+        parents.forEach(parent -> {
+            FindCategoryDTO findCategoryDTO = new FindCategoryDTO();
+            findCategoryDTO.setId(parent.getId());
+            findCategoryDTO.setCategory(categoryBaseMapper.toCategoryBaseDTO(parent));
+
+            // child
+            List<CategoryEntity> children = categoryRepository.findByParentId(parent.getId());
+            List<CategoryBaseDTO> childrenBaseDTO =  new ArrayList<>();
+            children.forEach(child -> {
+                CategoryBaseDTO  categoryBaseDTO = categoryBaseMapper.toCategoryBaseDTO(child);
+                childrenBaseDTO.add(categoryBaseDTO);
+            });
+            findCategoryDTO.setSubcategories(childrenBaseDTO);
+
+            categoryDTOS.add(findCategoryDTO);
+        });
+
+        return  categoryDTOS;
     }
+
 }

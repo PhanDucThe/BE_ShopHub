@@ -2,45 +2,131 @@ package vn.ducthe.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import vn.ducthe.dto.request.CreateVariantRequest;
-import vn.ducthe.entity.ImagesEntity;
-import vn.ducthe.entity.ProductsEntity;
-import vn.ducthe.entity.VariantAttributeOptionsEntity;
-import vn.ducthe.entity.VariantsEntity;
-import vn.ducthe.repository.VariantsRepository;
+import vn.ducthe.common.Util;
+import vn.ducthe.dto.request.CreateAttributesRequest;
+import vn.ducthe.dto.request.CreateProductVariantRequest;
+import vn.ducthe.dto.response.ImageDTO;
+import vn.ducthe.dto.response.VariantDTO;
+import vn.ducthe.exception.ResourceNotFoundException;
+import vn.ducthe.model.*;
+import vn.ducthe.repository.AttributeOptionRepository;
+import vn.ducthe.repository.AttributeRepository;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class VariantMapper {
 
-    private final ImageMapper imageMapper;
-    private final VariantAttributeOptionMapper  variantAttributeOptionMapper;
-    private final VariantsRepository  variantsRepository;
+    private final AttributeOptionRepository attributeOptionRepository;
+    private final AttributeRepository  attributeRepository;
+    private final Util util;
 
-    public VariantsEntity toEntityCreate(CreateVariantRequest createVariantRequest, ProductsEntity productsEntity) {
-        VariantsEntity variant = new VariantsEntity();
+    public VariantEntity createToDto(CreateProductVariantRequest request, ProductEntity product, Map<String, AttributeOptionEntity> attributeOptionCache) {
+        VariantEntity dto = new VariantEntity();
+        dto.setProductEntity(product);
+        dto.setVariantName(request.getVariantName());
+        dto.setOriginalPrice(request.getOriginalPrice());
+        dto.setSalePrice(request.getSalePrice());
+        dto.setStock(request.getStock());
+        dto.setSold(0);
 
-        variant.setSkuCode(createVariantRequest.getSkuCode());
-        variant.setVariantName(createVariantRequest.getVariantName());
-        variant.setOriginalPrice(createVariantRequest.getOriginalPrice());
-        variant.setSalePrice(createVariantRequest.getSalePrice());
-        variant.setStock(createVariantRequest.getStock());
-        variant.setStatus("active");
-        variant.setSold(0); // Default is Zero
+        // Thu Thap Attribute_Option de sau cung luu lai
+        List<Long> optionIds  = new ArrayList<>();
 
-        // Phan Xu li Anh
-        List<ImagesEntity> newImages  = createVariantRequest.getImages().stream().map(img -> imageMapper.toEntityCreate(img, variant)).toList();
-        variant.setImagesEntities(newImages);
+        List<VariantAttributeOptionEntity> variantAttributeOptions = request.getAttributes().stream().map(attribute -> {
+            AttributeOptionEntity attributeOption = getOrCreateAttributeOption(attribute, attributeOptionCache);
+            optionIds.add(attributeOption.getId()); // Co di da
+            VariantAttributeOptionEntity variantAttributeOption = new VariantAttributeOptionEntity();
+            variantAttributeOption.setVariantEntity(dto);
+            variantAttributeOption.setAttributeOptionEntity(attributeOption);
+            return variantAttributeOption;
+        }).toList();
+        dto.setVariantAttributeOptionEntities(variantAttributeOptions);
 
-        // Xu li Cac Attribute_Option
-        List<VariantAttributeOptionsEntity> newAttributeOptions = createVariantRequest.getAttributeOptionIds().stream().map(attributeId -> variantAttributeOptionMapper.toEntityCreate(variant,  attributeId)).toList();
-        variant.setVariantAttributeOptionsEntities(newAttributeOptions);
+        // Generate option_signature
+        Collections.sort(optionIds);
+        String optionSignature = optionIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining("_"));
+        dto.setOptionSignature(optionSignature);
 
-        variant.setProductsEntity(productsEntity);
-        return variant;
+        // Image
+        List<ImageEntity> images = request.getImages().stream().map(img -> {
+            ImageEntity imageEntity = new ImageEntity();
+            imageEntity.setImageUrl(img.getImageUrl());
+            imageEntity.setImageAlt(img.getImageAlt());
+            imageEntity.setSortOrder(img.getSortOrder());
+            imageEntity.setVariantEntity(dto);
+            return imageEntity;
+        }).toList();
+        dto.setImageEntities(images);
+
+        return dto;
     }
 
+    private AttributeOptionEntity getOrCreateAttributeOption (CreateAttributesRequest  createAttributesRequest, Map<String, AttributeOptionEntity> attributeOptionCache) {
+        String cacheKey = createAttributesRequest.getAttributeId() + "_" + createAttributesRequest.getAttributeValue(); // 1_Den
 
+        // Check cache truoc.
+        if (attributeOptionCache.containsKey(cacheKey)) {
+            return attributeOptionCache.get(cacheKey);
+        }
+
+        AttributeOptionEntity attributeOption;
+        if (Boolean.TRUE.equals(createAttributesRequest.getIsNew())) {
+            // Mac du la moi nhung ma van can thuan kiem tra xong data da
+            Optional<AttributeOptionEntity> existing = attributeOptionRepository.findByAttributeEntity_IdAndValue(createAttributesRequest.getAttributeId(), createAttributesRequest.getAttributeValue());
+            if (existing.isPresent()) {
+                attributeOption = existing.get();
+            } else {
+                // Tao moi
+                AttributeEntity attribute = attributeRepository.findById(createAttributesRequest.getAttributeId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Attribute not found: " + createAttributesRequest.getAttributeId()));
+                attributeOption = new AttributeOptionEntity();
+                attributeOption.setAttributeEntity(attribute);
+                attributeOption.setValue(createAttributesRequest.getAttributeValue());
+                attributeOptionRepository.save(attributeOption);
+            }
+        } else {
+            // Su dung cai co san
+            attributeOption = attributeOptionRepository.findById(createAttributesRequest.getOptionId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Option not found: " + createAttributesRequest.getOptionId()));
+        }
+        attributeOptionCache.put(cacheKey, attributeOption);
+        return attributeOption;
+    }
+
+    public VariantDTO toVariantDTO(VariantEntity variantEntity, Map<String, String> params) {
+        VariantDTO dto = new VariantDTO();
+        dto.setVariantId(variantEntity.getId());
+        dto.setOriginalPrice(variantEntity.getOriginalPrice());
+        dto.setSalePrice(variantEntity.getSalePrice());
+        dto.setStock(variantEntity.getStock());
+        dto.setSold(variantEntity.getSold());
+
+        // Ảnh.
+        List<ImageDTO> images = variantEntity.getImageEntities().stream().map(img -> {
+            ImageDTO imageDTO = new ImageDTO();
+            imageDTO.setUrl(img.getImageUrl());
+            imageDTO.setAlt(img.getImageAlt());
+            imageDTO.setSortOrder(img.getSortOrder());
+            return imageDTO;
+        }).toList();
+        dto.setImages(images);
+
+        // Option selected
+        Map<String, String> optionSelected = new HashMap<>();
+        variantEntity.getProductEntity().getCategoryEntity().getCategoryAttributeEntities()
+                .forEach(categoryAttributeEntity -> {
+                    AttributeEntity attributeEntity = categoryAttributeEntity.getAttributeEntity();
+                    String slug = params.get(util.toSlugify(attributeEntity.getNameEn()));
+                    String value = util.getValueFromSlug(attributeEntity.getId(), slug);
+                    optionSelected.put(attributeEntity.getNameEn(), value);
+                });
+        dto.setSelectOption(optionSelected);
+
+        return dto;
+    }
 }

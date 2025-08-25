@@ -2,32 +2,54 @@ package vn.ducthe.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import vn.ducthe.dto.request.CreateProductRequest;
 import vn.ducthe.dto.response.ProductDTO;
-import vn.ducthe.entity.*;
-import vn.ducthe.repository.ImagesRepository;
+import vn.ducthe.exception.ResourceNotFoundException;
+import vn.ducthe.model.ImageEntity;
+import vn.ducthe.model.ProductEntity;
+import vn.ducthe.model.VariantEntity;
+import vn.ducthe.repository.*;
 
 @Component
 @RequiredArgsConstructor
 public class ProductMapper {
-    private final ImagesRepository imagesRepository;
+
+    private final CategoryRepository categoryRepository;
+    private final BrandRepository brandRepository;
+    private final ImageRepository imageRepository;
     private final PriceMapper priceMapper;
     private final ReviewMapper reviewMapper;
 
+    public ProductEntity createToEntity(CreateProductRequest createProduct) {
+        ProductEntity product = new ProductEntity();
+        product.setName(createProduct.getName());
+        product.setSlug(createProduct.getSlug());
+        product.setDescription(createProduct.getDescription());
 
-    public ProductDTO toDto(VariantsEntity variantsEntity) {
+        product.setCategoryEntity(categoryRepository.findById(createProduct.getCategoryId()).orElseThrow(() -> new ResourceNotFoundException("Danh mục tồn tại!")));
+        product.setBrandEntity(brandRepository.findById(createProduct.getBrandId()).orElseThrow(() -> new ResourceNotFoundException("Thương hiệu không tồn tại!")));
+        return product;
+    }
+
+    public ProductDTO toDTO(VariantEntity variantEntity) {
         ProductDTO productDTO = new ProductDTO();
-        productDTO.setProductId(variantsEntity.getId());
-        productDTO.setProductName(variantsEntity.getVariantName());
-        ImagesEntity imagesEntity = imagesRepository.findByVariantsEntity_IdAndSortOrder(variantsEntity.getId(), 1);
+        productDTO.setProductId(variantEntity.getId());
+        productDTO.setProductName(variantEntity.getVariantName());
+        productDTO.setProductSlug(variantEntity.getSlug());
+        ImageEntity imagesEntity = imageRepository.findByVariantEntity_IdAndSortOrder(variantEntity.getId(), 1);
         productDTO.setProductImagesMain(imagesEntity.getImageUrl());
-        productDTO.setBrandName(variantsEntity.getProductsEntity().getBrandsEntity().getName());
-        productDTO.setCategoryName(variantsEntity.getProductsEntity().getCategoriesEntity().getName());
-        productDTO.setPrice(priceMapper.toPriceDTO(variantsEntity));
-        productDTO.setReviews(reviewMapper.toReviewDTO(variantsEntity.getReviewsEntities()));
-        productDTO.setSold(variantsEntity.getSold());
-        productDTO.setStatus(variantsEntity.getStatus());
-        productDTO.setStock(variantsEntity.getStock());
-        productDTO.setSkuCode(variantsEntity.getSkuCode());
+        productDTO.setBrandName(variantEntity.getProductEntity().getBrandEntity().getName());
+        productDTO.setCategoryName(variantEntity.getProductEntity().getCategoryEntity().getName());
+        productDTO.setPrice(priceMapper.toPriceDTO(variantEntity));
+        productDTO.setReviews(reviewMapper.toReviewDTO(variantEntity.getReviewEntities()));
+        productDTO.setSold(variantEntity.getSold());
+        productDTO.setStatus("active");
+        productDTO.setStock(variantEntity.getStock());
+
+        // url product detail.
+        String tempUrl = variantEntity.getProductEntity().getSlug();
+
+        productDTO.setProductSlug(tempUrl);
         return productDTO;
     }
 

@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ImageDTO {
-    private String image;
+    private String url;
     private String alt;
+    private Integer sortOrder;
 }

@@ -2,18 +2,18 @@ package vn.ducthe.mapper;
 
 import org.springframework.stereotype.Component;
 import vn.ducthe.dto.response.PriceDTO;
-import vn.ducthe.entity.VariantsEntity;
+import vn.ducthe.model.VariantEntity;
 
 @Component
 public class PriceMapper {
-    public PriceDTO toPriceDTO(VariantsEntity variantsEntity) {
+    public PriceDTO toPriceDTO(VariantEntity variantEntity) {
         PriceDTO priceDTO = new PriceDTO();
-        priceDTO.setOriginalPrice(variantsEntity.getOriginalPrice());
+        priceDTO.setOriginalPrice(variantEntity.getOriginalPrice());
         priceDTO.setCurrency("đ");
-        if (variantsEntity.getSalePrice() == null) {
-            priceDTO.setSalePrice(variantsEntity.getOriginalPrice());
+        if (variantEntity.getSalePrice() == null) {
+            priceDTO.setSalePrice(variantEntity.getOriginalPrice());
         } else {
-            priceDTO.setSalePrice(variantsEntity.getSalePrice());
+            priceDTO.setSalePrice(variantEntity.getSalePrice());
         }
         priceDTO.setPercentDiscount((int) Math.floor((priceDTO.getOriginalPrice() -  priceDTO.getSalePrice()) / priceDTO.getOriginalPrice() * 100));
         priceDTO.setDiscount(priceDTO.getOriginalPrice() - priceDTO.getSalePrice());

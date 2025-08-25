@@ -2,16 +2,16 @@ package vn.ducthe.mapper;
 
 import org.springframework.stereotype.Component;
 import vn.ducthe.dto.response.ReviewDTO;
-import vn.ducthe.entity.ReviewsEntity;
+import vn.ducthe.model.ReviewEntity;
 
 import java.util.List;
 
 @Component
 public class ReviewMapper {
-    public ReviewDTO toReviewDTO(List<ReviewsEntity> reviewsEntity) {
+    public ReviewDTO toReviewDTO(List<ReviewEntity> reviewEntities) {
         ReviewDTO reviewDTO = new ReviewDTO();
 
-        int countReview = reviewsEntity.size();
+        int countReview = reviewEntities.size();
         reviewDTO.setReviewCount(countReview);
 
         if (countReview == 0) {
@@ -20,7 +20,7 @@ public class ReviewMapper {
         }
 
         double calculatorRating = 0D;
-        for (ReviewsEntity item : reviewsEntity) {
+        for (ReviewEntity item : reviewEntities) {
             calculatorRating += item.getRating();
         }
         reviewDTO.setRating(String.format("%.2f", calculatorRating / countReview));
@@ -28,4 +28,3 @@ public class ReviewMapper {
         return reviewDTO;
     }
 }
-
