@@ -48,5 +48,14 @@ public class UserEntity extends BaseEntity implements Serializable {
     private List<ReviewEntity> reviews = new ArrayList<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "userEntity")
-    private List<ReviewReplieEntity> reviewReplieEntities =  new ArrayList<>();
+    private List<ReviewReplieEntity> reviewRepliesEntities =  new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "userEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AddresseEntity> addressesEntities = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "userEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartEntity> cartEntities = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "userEntity")
+    private List<OrderEntity> orderEntities = new ArrayList<>();
 }

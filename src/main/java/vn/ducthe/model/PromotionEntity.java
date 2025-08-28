@@ -60,4 +60,7 @@ public class PromotionEntity extends BaseEntity implements Serializable {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "promotionEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PromotionAppliedEntity> promotionAppliedEntities =  new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "promotionEntity")
+    private List<OrderEntity> orderEntities = new ArrayList<>();
 }

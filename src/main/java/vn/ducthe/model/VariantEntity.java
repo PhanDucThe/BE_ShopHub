@@ -47,4 +47,10 @@ public class VariantEntity extends BaseEntity implements Serializable {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "variantEntity")
     private List<ReviewEntity> reviewEntities =  new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "variantEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItemEntity> cartItemEntities =  new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "variantEntity")
+    private List<OrderItemEntity> orderItemEntities =  new ArrayList<>();
 }
