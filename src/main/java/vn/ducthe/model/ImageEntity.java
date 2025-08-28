@@ -18,10 +18,16 @@ public class ImageEntity extends BaseEntity implements Serializable {
     @Column(name = "image_alt")
     private String imageAlt;
 
+    @Column(name = "image_type")
+    private String imageType;
+
     @Column(name = "sort_order")
     private Integer sortOrder;
 
+    @Column(name = "is_primary")
+    private Boolean isPrimary;
+
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "variant_id")
-    private VariantEntity variantEntity;
+    @JoinColumn(name = "product_id")
+    private ProductEntity productEntity;
 }

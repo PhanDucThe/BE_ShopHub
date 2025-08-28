@@ -67,9 +67,11 @@ public class ProductOptionDtoFactory {
             VariantEntity variant = variantEntity.get();
             optionDto.put("originalPrice", variant.getOriginalPrice());
             optionDto.put("salePrice", variant.getSalePrice());
+            optionDto.put("image",  variant.getImage());
         } else {
             optionDto.put("originalPrice", 0.0);
             optionDto.put("salePrice", 0.0);
+            optionDto.put("image", "");
         }
 
         return optionDto;

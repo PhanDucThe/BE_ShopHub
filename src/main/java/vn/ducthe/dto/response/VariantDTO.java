@@ -16,6 +16,6 @@ public class VariantDTO {
     private Double salePrice;
     private Integer stock;
     private Integer sold;
+    private String image;
     private Map<String, String> selectOption = new HashMap<>();
-    private List<ImageDTO> images = new ArrayList<>();
 }

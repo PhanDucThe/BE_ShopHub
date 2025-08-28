@@ -52,17 +52,6 @@ public class VariantMapper {
                 .collect(Collectors.joining("_"));
         dto.setOptionSignature(optionSignature);
 
-        // Image
-        List<ImageEntity> images = request.getImages().stream().map(img -> {
-            ImageEntity imageEntity = new ImageEntity();
-            imageEntity.setImageUrl(img.getImageUrl());
-            imageEntity.setImageAlt(img.getImageAlt());
-            imageEntity.setSortOrder(img.getSortOrder());
-            imageEntity.setVariantEntity(dto);
-            return imageEntity;
-        }).toList();
-        dto.setImageEntities(images);
-
         return dto;
     }
 
@@ -105,16 +94,7 @@ public class VariantMapper {
         dto.setSalePrice(variantEntity.getSalePrice());
         dto.setStock(variantEntity.getStock());
         dto.setSold(variantEntity.getSold());
-
-        // Ảnh.
-        List<ImageDTO> images = variantEntity.getImageEntities().stream().map(img -> {
-            ImageDTO imageDTO = new ImageDTO();
-            imageDTO.setUrl(img.getImageUrl());
-            imageDTO.setAlt(img.getImageAlt());
-            imageDTO.setSortOrder(img.getSortOrder());
-            return imageDTO;
-        }).toList();
-        dto.setImages(images);
+        dto.setImage(variantEntity.getImage());
 
         // Option selected
         Map<String, String> optionSelected = new HashMap<>();

@@ -5,10 +5,14 @@ import org.springframework.stereotype.Component;
 import vn.ducthe.dto.request.CreateProductRequest;
 import vn.ducthe.dto.response.ProductDTO;
 import vn.ducthe.exception.ResourceNotFoundException;
+import vn.ducthe.model.AttributeOptionEntity;
 import vn.ducthe.model.ImageEntity;
 import vn.ducthe.model.ProductEntity;
 import vn.ducthe.model.VariantEntity;
 import vn.ducthe.repository.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ public class ProductMapper {
     private final ImageRepository imageRepository;
     private final PriceMapper priceMapper;
     private final ReviewMapper reviewMapper;
+    private final AttributeOptionRepository attributeOptionRepository;
 
     public ProductEntity createToEntity(CreateProductRequest createProduct) {
         ProductEntity product = new ProductEntity();
@@ -36,10 +41,9 @@ public class ProductMapper {
         productDTO.setProductId(variantEntity.getId());
         productDTO.setProductName(variantEntity.getVariantName());
         productDTO.setProductSlug(variantEntity.getSlug());
-        ImageEntity imagesEntity = imageRepository.findByVariantEntity_IdAndSortOrder(variantEntity.getId(), 1);
-        productDTO.setProductImagesMain(imagesEntity.getImageUrl());
+        productDTO.setImage(variantEntity.getImage());
         productDTO.setBrandName(variantEntity.getProductEntity().getBrandEntity().getName());
-        productDTO.setCategoryName(variantEntity.getProductEntity().getCategoryEntity().getName());
+        productDTO.setCategoryName(variantEntity.getProductEntity().getCategoryEntity().getParent().getName());
         productDTO.setPrice(priceMapper.toPriceDTO(variantEntity));
         productDTO.setReviews(reviewMapper.toReviewDTO(variantEntity.getReviewEntities()));
         productDTO.setSold(variantEntity.getSold());
@@ -48,6 +52,18 @@ public class ProductMapper {
 
         // url product detail.
         String tempUrl = variantEntity.getProductEntity().getSlug();
+
+        // Bay giờ mình phải lấy option ra.
+        String signature = variantEntity.getOptionSignature();
+        // Tách từng option ra đã.
+        String[] options = signature.split("_");
+        Map<String, String> optionSelected = new HashMap<>();
+        for (String option : options) {
+            AttributeOptionEntity attributeOptionEntity = attributeOptionRepository.findById(Long.parseLong(option))
+                    .orElseThrow(() -> new ResourceNotFoundException("Option not found"));
+            optionSelected.put(attributeOptionEntity.getAttributeEntity().getNameEn(), attributeOptionEntity.getValue());
+        }
+        productDTO.setOption(optionSelected);
 
         productDTO.setProductSlug(tempUrl);
         return productDTO;

@@ -42,4 +42,7 @@ public class ProductEntity extends BaseEntity implements Serializable {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "productEntity")
     List<PromotionAppliedEntity> promotionAppliedEntities = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "productEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<ImageEntity> imageEntities = new ArrayList<>();
 }

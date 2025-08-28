@@ -35,15 +35,15 @@ public class VariantEntity extends BaseEntity implements Serializable {
     @Column(name = "option_signature")
     private String optionSignature;
 
+    @Column(name = "image")
+    private String image;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id")
     private ProductEntity productEntity;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "variantEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VariantAttributeOptionEntity> variantAttributeOptionEntities =  new ArrayList<>();
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "variantEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ImageEntity> imageEntities =  new ArrayList<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "variantEntity")
     private List<ReviewEntity> reviewEntities =  new ArrayList<>();

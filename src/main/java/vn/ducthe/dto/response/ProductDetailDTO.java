@@ -15,6 +15,8 @@ public class ProductDetailDTO {
     private BrandDTO brand;
     private CategoryDTO category;
     private List<SpecificationDTO> specification = new ArrayList<>();
+    private List<ImageDTO> images = new ArrayList<>();
     private VariantDTO currentVariant;
+    private ReviewDTO review;
     private Map<String, Object> availableOptions = new TreeMap<>(); // Nested như {"storages": [ {value, slug, available, colors: [...] } ]}
 }

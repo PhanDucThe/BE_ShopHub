@@ -33,6 +33,7 @@ public class ProductsServiceImpl implements ProductsService {
     private final ProductDetailMapper productDetailMapper;
     private final CategoryAttributeMapper  categoryAttributeMapper;
     private final ProductOptionsService  productOptionsService;
+    private final ReviewMapper reviewMapper;
 
     // Chưa code clean and validation dữ liệu.
     @Transactional(rollbackFor = Exception.class)
@@ -81,13 +82,17 @@ public class ProductsServiceImpl implements ProductsService {
         productDetailDTO.setSpecification(specifications);
 
         // Lay sign ra de di tim current variants
-        List<CategoryAttributeEntity> categoryAttributeEntities = categoryAttributeMapper.toCategoryAttributeEntities(product.getCategoryEntity());
+        List<CategoryAttributeEntity> categoryAttributeEntities = categoryAttributeMapper
+                .toCategoryAttributeEntities(product.getCategoryEntity().getParent());
         String sign = util.getSignatureFromOptions(params, categoryAttributeEntities);
         // current variant
         VariantEntity variant = variantRepository.findByProductEntity_IdAndOptionSignature(product.getId(), sign)
                 .orElseThrow(() -> new ResourceNotFoundException("Variant not found"));
         VariantDTO currentVariant = variantMapper.toVariantDTO(variant, params);
         productDetailDTO.setCurrentVariant(currentVariant);
+
+        // Reviews
+        productDetailDTO.setReview(reviewMapper.toReviewDTO(variant.getReviewEntities()));
 
         // Lay ra cac option hien co.
         Map<String, Object> availableOptions = productOptionsService.buildAvailableOptions(product, categoryAttributeEntities);
